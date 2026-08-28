@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Beboki — Strażnicy Katowic",
+      "hasCanvas": false,
+      "bodyTextLen": 111,
+      "bodyTextHash": "574da30ed0a446e1f1653498829ee088b4fff4c8ad634afb48de56caf033817b",
+      "bodyTextPrefix": "Strażnicy Katowic BEBOKI Punia węszy Serce Śląska. Beboki machaj",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "Beboki — Strażnicy Katowic",
+      "hasCanvas": false,
+      "bodyTextLen": 111,
+      "bodyTextHash": "574da30ed0a446e1f1653498829ee088b4fff4c8ad634afb48de56caf033817b",
+      "bodyTextPrefix": "Strażnicy Katowic BEBOKI Punia węszy Serce Śląska. Beboki machaj",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

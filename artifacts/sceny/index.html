@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Beboki — Sceny budynków</title>
+<style>
+  :root {
+    --gold:#e8c36a; --paper:#f3e6c8; --ink:#140e0a; --line:#6a542e;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#0a0705; color:var(--paper); font-family:Georgia,"Times New Roman",serif; }
+  body { display:flex; flex-direction:column; }
+  header.bar {
+    display:flex; align-items:center; gap:10px; padding:8px 12px;
+    background:linear-gradient(#2a2016,#120e0b); border-bottom:1px solid var(--line); z-index:5;
+  }
+  header.bar h1 { font-size:16px; margin:0; color:var(--gold); letter-spacing:.06em; }
+  header.bar p { margin:0; font-size:12px; opacity:.75; }
+  .tabs { display:flex; gap:6px; padding:8px; background:#120e0b; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .tabs button {
+    background:#1c1612; color:var(--paper); border:1px solid #4a3a28;
+    padding:8px 12px; border-radius:10px; font-family:inherit; cursor:pointer; font-size:13px;
+  }
+  .tabs button.on { border-color:var(--gold); color:var(--gold); background:#2a2014; }
+  .stage {
+    position:relative; flex:1; min-height:0; overflow:hidden; background:#000;
+  }
+  .stage .room {
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    transform:scale(1.08); animation:ken 28s ease-in-out infinite alternate;
+    pointer-events:none;
+  }
+  .stage .room.still { display:none; }
+  .veil {
+    position:absolute; inset:0;
+    background:linear-gradient(to top, rgba(8,4,2,.55) 0%, transparent 38%, rgba(8,4,2,.2) 100%);
+    pointer-events:none;
+  }
+  .actor-wrap {
+    position:absolute; left:4%; bottom:0; height:88%; width:auto;
+    display:flex; align-items:flex-end; pointer-events:none;
+    filter:drop-shadow(18px 22px 18px rgba(0,0,0,.55));
+  }
+  .actor-wrap img, .actor-wrap video, .actor-wrap canvas {
+    height:100%; width:auto; max-width:52vw; object-fit:contain;
+    background:transparent;
+  }
+  .actor-wrap.work img { animation:work 1.15s ease-in-out infinite; transform-origin:60% 90%; }
+  .actor-wrap.idle img { animation:idle 2.6s ease-in-out infinite; transform-origin:50% 100%; }
+  .actor-wrap.hop img { animation:hop 1.05s ease-in-out infinite; transform-origin:50% 100%; }
+  .actor-wrap.glow img { animation:idle 2.8s ease-in-out infinite; }
+  .glow-lamp {
+    position:absolute; left:18%; bottom:18%; width:120px; height:120px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,190,70,.45), transparent 70%);
+    animation:flick 1.4s ease-in-out infinite; pointer-events:none; mix-blend-mode:screen;
+  }
+  .dust { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .dust i {
+    position:absolute; width:3px; height:3px; border-radius:50%; background:#e8c36a; opacity:.35;
+    animation:float linear infinite;
+  }
+  .card {
+    position:absolute; right:14px; bottom:14px; max-width:320px;
+    background:rgba(16,12,10,.82); border:1px solid var(--line); border-radius:14px; padding:12px 14px;
+    backdrop-filter:blur(8px);
+  }
+  .card h2 { margin:0 0 4px; color:var(--gold); font-size:20px; }
+  .card p { margin:0; font-size:13px; line-height:1.45; opacity:.9; }
+  .modes { margin-top:10px; display:flex; gap:6px; }
+  .modes button {
+    flex:1; background:#2a2014; color:var(--paper); border:1px solid #4a3a28;
+    border-radius:8px; padding:6px; font-family:inherit; cursor:pointer; font-size:12px;
+  }
+  .modes button.on { border-color:var(--gold); color:var(--gold); }
+  @keyframes ken {
+    from { transform:scale(1.04) translate(0,0); }
+    to { transform:scale(1.14) translate(-2%,-1%); }
+  }
+  @keyframes idle {
+    0%,100% { transform:translateY(0) rotate(-0.6deg); }
+    50% { transform:translateY(-10px) rotate(0.8deg); }
+  }
+  @keyframes work {
+    0%,100% { transform:rotate(-4deg) translateY(0); }
+    50% { transform:rotate(6deg) translateY(-6px); }
+  }
+  @keyframes hop {
+    0%,100% { transform:translateY(8px) rotate(-2deg); }
+    45% { transform:translateY(-28px) rotate(3deg); }
+    60% { transform:translateY(4px); }
+  }
+  @keyframes flick {
+    0%,100% { opacity:.55; transform:scale(1); }
+    40% { opacity:.9; transform:scale(1.12); }
+    70% { opacity:.4; transform:scale(.96); }
+  }
+  @keyframes float {
+    from { transform:translateY(20px); opacity:0; }
+    20% { opacity:.4; }
+    to { transform:translateY(-80vh); opacity:0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stage .room, .actor-wrap img { animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div>
+    <h1>BEBOKI — SCENY</h1>
+    <p>Postacie bez tła · pętle w budynkach</p>
+  </div>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<section class="stage" id="stage">
+  <video class="room" id="roomVid" muted loop playsinline autoplay></video>
+  <img class="room still" id="roomStill" alt="">
+  <div class="veil"></div>
+  <div class="dust" id="dust"></div>
+  <div class="glow-lamp" id="lamp" hidden></div>
+  <div class="actor-wrap idle" id="actorWrap">
+    <img id="actorImg" alt="">
+    <canvas id="actorCanvas" hidden></canvas>
+  </div>
+  <aside class="card">
+    <h2 id="title">—</h2>
+    <p id="blurb"></p>
+    <div class="modes">
+      <button class="on" data-mode="cutout" id="btnCut">Wycinanka</button>
+      <button data-mode="loop" id="btnLoop">Pętla wideo</button>
+    </div>
+  </aside>
+</section>
+<script>
+const SCENES = {
+  kopalnia: {
+    title: 'Kopalnia Hanysa',
+    who: 'Hanys · Budowniczy',
+    blurb: 'Hanys kuje węgiel i rudę pod Spodkiem. Im głębiej, tym cenniejszy skarb.',
+    bg: 'bg/kopalnia.mp4', still: 'bg/kopalnia.jpg',
+    cut: 'cutouts/hanys.png', loop: 'loops/hanys.webm',
+    keySrc: '../imagine_videos/b050effb-942f-40a8-8009-015526585a71.mp4',
+    key: [229,0,140], anim: 'work', lamp: false
+  },
+  warsztat: {
+    title: 'Warsztat Fachury',
+    who: 'Fachura · Wynalazca',
+    blurb: 'Dwa świecące kilofy i stół pełen kół zębatych. Fachura ulepsza osadę.',
+    bg: 'bg/warsztat.mp4', still: 'bg/warsztat.jpg',
+    cut: 'cutouts/fachura.png', loop: 'loops/fachura.webm',
+    keySrc: '../imagine_videos/7bf1540f-90f2-4566-a0d0-ab4fd5cd1d3c.mp4',
+    key: [181,0,114], anim: 'work', lamp: false
+  },
+  latarnia: {
+    title: 'Latarnia Podciepa',
+    who: 'Podciep · Latarnik',
+    blurb: 'Lampa naftowa odsłania sekrety podziemi. Bez Podciepa ścieżki gasną.',
+    bg: 'bg/latarnia.mp4', still: 'bg/latarnia.jpg',
+    cut: 'cutouts/podciep.png', loop: 'loops/podciep.webm',
+    keySrc: '../imagine_videos/7f720cef-3e54-4c1c-b9c1-46e2aab2fc7e.mp4',
+    key: [197,7,131], anim: 'glow', lamp: true
+  },
+  schronisko: {
+    title: 'Schronisko dla psów',
+    who: 'Hopla · Zwiadowczyni',
+    blurb: 'Hopla skacze między kojcami. Punia, Bączek, Burek, Reks i Figa czekają na misję.',
+    bg: 'bg/schronisko.mp4', still: 'bg/schronisko.jpg',
+    cut: 'cutouts/hopla.png', loop: 'loops/hopla.webm',
+    keySrc: '../imagine_videos/026246fd-f5ff-462b-b599-be1e331131eb.mp4',
+    key: [185,0,94], anim: 'hop', lamp: false
+  },
+  osada: {
+    title: 'Osada pod Spodkiem',
+    who: 'Czterej strażnicy',
+    blurb: 'Całe miasto jest planszą. Z osady wychodzą misje — nikt nie ginie, bebok wraca do domu.',
+    bg: '', still: 'bg/osada.jpg',
+    cut: 'cutouts/hopla.png', loop: '', keySrc: '', key: [0,0,0], anim: 'idle', lamp: false
+  }
+};
+
+const tabs = document.getElementById('tabs');
+Object.entries(SCENES).forEach(([id,s]) => {
+  const b = document.createElement('button');
+  b.textContent = s.title;
+  b.dataset.id = id;
+  b.onclick = () => show(id);
+  tabs.appendChild(b);
+});
+
+const roomVid = document.getElementById('roomVid');
+const roomStill = document.getElementById('roomStill');
+const actorWrap = document.getElementById('actorWrap');
+const actorImg = document.getElementById('actorImg');
+const actorCanvas = document.getElementById('actorCanvas');
+const lamp = document.getElementById('lamp');
+const title = document.getElementById('title');
+const blurb = document.getElementById('blurb');
+let mode = 'cutout';
+let current = 'kopalnia';
+let keyVideo = null, keyRaf = 0;
+
+function dust() {
+  const box = document.getElementById('dust');
+  box.innerHTML = '';
+  for (let i=0;i<18;i++) {
+    const d = document.createElement('i');
+    d.style.left = Math.random()*100 + '%';
+    d.style.bottom = Math.random()*20 + '%';
+    d.style.animationDuration = (8+Math.random()*10) + 's';
+    d.style.animationDelay = (-Math.random()*8) + 's';
+    box.appendChild(d);
+  }
+}
+
+function stopKey() {
+  if (keyRaf) cancelAnimationFrame(keyRaf);
+  keyRaf = 0;
+  if (keyVideo) { keyVideo.pause(); keyVideo = null; }
+  actorCanvas.hidden = true;
+}
+
+function startKey(scene) {
+  stopKey();
+  if (!scene.keySrc) { actorImg.hidden = false; return; }
+  const v = document.createElement('video');
+  v.src = scene.keySrc;
+  v.muted = true; v.loop = true; v.playsInline = true;
+  v.addEventListener('playing', () => {
+    actorCanvas.hidden = false;
+    actorImg.hidden = true;
+    const ctx = actorCanvas.getContext('2d', { willReadFrequently:true });
+    const [kr,kg,kb] = scene.key;
+    const tick = () => {
+      if (!keyVideo) return;
+      const w = v.videoWidth, h = v.videoHeight;
+      if (w) {
+        actorCanvas.width = w; actorCanvas.height = h;
+        ctx.drawImage(v,0,0);
+        const img = ctx.getImageData(0,0,w,h);
+        const d = img.data;
+        for (let i=0;i<d.length;i+=4) {
+          const dr=d[i]-kr, dg=d[i+1]-kg, db=d[i+2]-kb;
+          if (dr*dr+dg*dg+db*db < 17000) d[i+3]=0;
+        }
+        ctx.putImageData(img,0,0);
+      }
+      keyRaf = requestAnimationFrame(tick);
+    };
+    tick();
+  });
+  keyVideo = v;
+  v.play().catch(()=>{ actorImg.hidden=false; actorCanvas.hidden=true; });
+}
+
+function show(id) {
+  current = id;
+  const s = SCENES[id];
+  [...tabs.children].forEach(b => b.classList.toggle('on', b.dataset.id===id));
+  title.textContent = s.title;
+  blurb.textContent = s.who + ' — ' + s.blurb;
+  actorWrap.className = 'actor-wrap ' + s.anim;
+  lamp.hidden = !s.lamp;
+  actorImg.src = s.cut;
+  actorImg.alt = s.who;
+  roomStill.src = s.still;
+  if (s.bg) {
+    roomVid.src = s.bg;
+    roomVid.style.display = 'block';
+    roomStill.style.display = 'none';
+    roomVid.play().catch(()=>{
+      roomVid.style.display='none';
+      roomStill.style.display='block';
+    });
+  } else {
+    roomVid.removeAttribute('src'); roomVid.load();
+    roomVid.style.display='none';
+    roomStill.style.display='block';
+  }
+  applyMode();
+}
+function applyMode() {
+  const s = SCENES[current];
+  document.getElementById('btnCut').classList.toggle('on', mode==='cutout');
+  document.getElementById('btnLoop').classList.toggle('on', mode==='loop');
+  if (mode==='loop') startKey(s);
+  else { stopKey(); actorImg.hidden=false; }
+}
+document.getElementById('btnCut').onclick = () => { mode='cutout'; applyMode(); };
+document.getElementById('btnLoop').onclick = () => { mode='loop'; applyMode(); };
+
+dust();
+show('kopalnia');
+</script>
+</body>
+</html>
