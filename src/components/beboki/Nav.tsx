@@ -1,4 +1,4 @@
-import { Flag, Home, Map, Pickaxe, Users } from "lucide-react";
+import { BookOpen, Flag, Home, Map, Pickaxe, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGame, type Screen } from "@/lib/beboki-store";
 
@@ -8,24 +8,18 @@ const ITEMS: { id: Screen; label: string; icon: typeof Home }[] = [
   { id: "team", label: "Drużyna", icon: Users },
   { id: "map", label: "Mapa", icon: Map },
   { id: "missions", label: "Misje", icon: Flag },
+  { id: "play", label: "Bestiariusz", icon: BookOpen },
 ];
 
 export function Nav() {
   const screen = useGame((s) => s.screen);
   const go = useGame((s) => s.go);
-  const active =
-    screen === "building" ? "buildings" : screen === "brief" || screen === "win" || screen === "place" ? "missions" : screen;
+  const active = screen === "building" ? "buildings" : screen === "brief" || screen === "win" || screen === "place" ? "missions" : screen;
 
   return (
-    <nav className="flex gap-1 border-t border-line bg-coal p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <nav className="flex gap-1 overflow-x-auto border-t border-line bg-coal p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       {ITEMS.map(({ id, label, icon: Icon }) => (
-        <Button
-          key={id}
-          variant="nav"
-          data-on={active === id}
-          onClick={() => go(id)}
-          aria-current={active === id ? "page" : undefined}
-        >
+        <Button key={id} variant="nav" data-on={active === id} onClick={() => go(id)} aria-current={active === id ? "page" : undefined}>
           <Icon className="size-4" strokeWidth={1.75} />
           {label}
         </Button>
