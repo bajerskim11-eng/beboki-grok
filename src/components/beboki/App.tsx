@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Building } from "./Building";
 import { Buildings } from "./Buildings";
 import { Brief } from "./Brief";
+import { Bestiary } from "./Bestiary";
 import { Hud } from "./Hud";
 import { MapScreen } from "./MapScreen";
 import { Missions } from "./Missions";
@@ -48,17 +49,13 @@ export function BebokiApp() {
           {screen === "missions" ? <Missions /> : null}
           {screen === "brief" ? <Brief /> : null}
           {screen === "place" ? <Place /> : null}
+          {screen === "play" ? <Bestiary /> : null}
           {screen === "win" ? <Win /> : null}
         </div>
       </main>
       {showChrome ? <Nav /> : null}
       {toast ? (
-        <p
-          role="status"
-          className="pointer-events-none absolute bottom-24 left-1/2 z-30 w-[90%] max-w-sm -translate-x-1/2 rounded-lg border border-gold bg-coal px-4 py-2 text-center text-sm text-fg shadow-panel"
-        >
-          {toast}
-        </p>
+        <p role="status" className="pointer-events-none absolute bottom-24 left-1/2 z-30 w-[90%] max-w-sm -translate-x-1/2 rounded-lg border border-gold bg-coal px-4 py-2 text-center text-sm text-fg shadow-panel">{toast}</p>
       ) : null}
     </div>
   );
